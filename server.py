@@ -1,15 +1,30 @@
 import socket
-import sys
+import os
+from _thread import *
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-port = 3125
-s.bind(('0.0.0.0', port))
-print ('Socket binded to port 3125')
-s.listen(3)
-print ('socket is listening')
+ServerSideSocket = socket.socket()
+host = '127.0.0.1'
+port = 2004
+ThreadCount = 0
+try:
+    ServerSideSocket.bind((host, port))
+except socket.error as e:
+    print(str(e))
+
+print('Socket is listening..')
+ServerSideSocket.listen(5)
+
+def client(connection,address):
+    connection.send(str.encode('Server is working:'))
+    while True:
+        data = connection.recv(2048)
+        print("Msg from",address," : ",data.decode('utf-8'))
+        if data.decode('utf-8')=="bye":
+            break
+    connection.close()
 
 while True:
-    c, addr = s.accept()
-    print ('Got connection from ', addr)
-    print (c.recv(1024))
-    c.close()
+    Client, address = ServerSideSocket.accept()
+    print('Connected to: ' + address[0] + ':' + str(address[1]))
+    start_new_thread(client, (Client,address ))
+ServerSideSocket.close()
